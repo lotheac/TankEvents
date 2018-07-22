@@ -97,7 +97,6 @@ function TEv:Add(msg, tooltip, icon, color)
   -- and move the rest up
   local bottom = TankEvFrame.bottom
   bottom:SetPoint("BOTTOMRIGHT", ev, "TOPRIGHT")
-  TankEvFrame.top = TankEv[ev.nexti]
   TankEvFrame.bottom = ev
   if (icon) then
     ev.icon:SetTexture(icon)
@@ -106,6 +105,7 @@ function TEv:Add(msg, tooltip, icon, color)
     ev.icon:Hide()
   end
   ev.tooltip = tooltip
+  if not color then color = { 1, 1, 0 } end
   ev.fs:SetTextColor(unpack(color))
   ev.fs:SetText(msg)
   ev:SetWidth(ev.fs:GetStringWidth() + 2 + ev.icon:GetWidth())
