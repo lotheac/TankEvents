@@ -126,16 +126,19 @@ function TEv:CombatEvent(event)
     print("unexpected " .. event)
   end
   local ts, ev, hidecaster, sguid, sname, sflg, srflg, dguid, dflg, drflg = CombatLogGetCurrentEventInfo()
+  if not (dguid == UnitGUID("player") or sguid == UnitGUID("player")) then
+    return
+  end
   local spid, spnam, spsch
   local icon
   local msg = CombatLog_OnEvent(Blizzard_CombatLog_CurrentSettings, CombatLogGetCurrentEventInfo())
-  if ev == "SPELL_INTERRUPT" and sguid == UnitGUID("player") then
+  if sguid == UnitGUID("player") then
+    if ev ~= "SPELL_INTERRUPT" then return end
     local spid, spnam, spsch, extraspid, extraspnam = select(12, CombatLogGetCurrentEventInfo())
     icon = select(3, GetSpellInfo(spid))
     TEv:Add(extraspnam, msg, icon, {1,1,0})
     return
   end
-  if dguid ~= UnitGUID("player") then return end
   local seloffset
   if ev == "SWING_DAMAGE" then
     seloffset = 12
