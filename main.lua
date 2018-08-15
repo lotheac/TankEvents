@@ -133,30 +133,29 @@ function TEv:CombatEvent(event)
   local spid, spnam, spsch
   local icon
   local msg = CombatLog_OnEvent(Blizzard_CombatLog_CurrentSettings, CombatLogGetCurrentEventInfo())
-  if sguid == UnitGUID("player") then
-    if ev ~= "SPELL_INTERRUPT" then return end
-    local spid, spnam, spsch, extraspid, extraspnam = select(12, CombatLogGetCurrentEventInfo())
-    icon = select(3, GetSpellInfo(spid))
-    TEv:Add(extraspnam, msg, icon, {1,1,0})
-    return
-  end
   local seloffset
-  if ev == "SWING_DAMAGE" then
+  local to_me = dguid == UnitGUID("player")
+  if to_me and ev == "SWING_DAMAGE" then
     seloffset = 12
-  elseif ev == "ENVIRONMENTAL_DAMAGE" then
+  elseif to_me and ev == "ENVIRONMENTAL_DAMAGE" then
     seloffset = 13
-  elseif ev == "RANGE_DAMAGE" or ev == "SPELL_DAMAGE" or ev == "SPELL_PERIODIC_DAMAGE" then
+  elseif to_me and (ev == "RANGE_DAMAGE" or ev == "SPELL_DAMAGE" or ev == "SPELL_PERIODIC_DAMAGE") then
     spid, spnam, spsch = select(12, CombatLogGetCurrentEventInfo())
     seloffset = 15
-  elseif string.find(ev, "_DAMAGE$") then
+  elseif to_me and string.find(ev, "_DAMAGE$") then
     print("unhandled evtype ".. ev)
     return
-  elseif string.find(ev, "_HEAL$") then
+  elseif to_me and string.find(ev, "_HEAL$") then
     local spid, spnam, spsch, heal, overheal, absorb, crit = select(12, CombatLogGetCurrentEventInfo())
     local effheal = heal - overheal
     if (effheal < 0.025 * UnitHealthMax("player")) then return end
     local icon = select(3, GetSpellInfo(spid))
     TEv:Add(string.format("+%s", AbbreviateLargeNumbers(effheal)), msg, icon, {0,1,0})
+    return
+  elseif ev == "SPELL_INTERRUPT" and sguid == UnitGUID("player") then
+    local spid, spnam, spsch, extraspid, extraspnam = select(12, CombatLogGetCurrentEventInfo())
+    icon = select(3, GetSpellInfo(spid))
+    TEv:Add(extraspnam, msg, icon, {1,1,0})
     return
   else return
   end
