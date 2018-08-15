@@ -20,6 +20,7 @@ function eh:InitAddon(ev, addon)
   end
   local f = CreateFrame("ScrollFrame", "TankEventsFrame", UIParent)
   TankEvFrame = f
+  f:SetFrameStrata("LOW")
   f:SetClampedToScreen(true)
   f:SetMovable(true)
   f:SetResizable(true)
