@@ -162,14 +162,14 @@ function TEv:CombatEvent(event)
 
   local dam, overkill, sch, resist, block, absorb, crit = select(seloffset, CombatLogGetCurrentEventInfo())
   if (dam < 0.025 * UnitHealthMax("player")) then return end
-  local text = AbbreviateLargeNumbers(dam) .. "|cffffffff"
+  local text = AbbreviateLargeNumbers(dam)
   resist = resist or 0
   absorb = absorb or 0
   block = block or 0
   if (resist >= 0.1 * dam) then text = text .. string.format(" <%s>", AbbreviateLargeNumbers(resist)) end
   if (block >= 0.1 * dam) then text = text .. string.format(" {%s}", AbbreviateLargeNumbers(block)) end
   if (absorb >= 0.1 * dam) then text = text .. string.format(" (%s)", AbbreviateLargeNumbers(absorb)) end
-  if (overkill > 0) then text = string.format("%s †", text) end
+  if (overkill > 0) then text = string.format("|cffffffff %s †", text) end
   local icon
   if (spid) then
     icon = select(3, GetSpellInfo(spid))
