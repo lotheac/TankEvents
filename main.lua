@@ -169,7 +169,7 @@ function TEv:CombatEvent(event)
   if (resist >= 0.1 * dam) then text = text .. string.format(" <%s>", AbbreviateLargeNumbers(resist)) end
   if (block >= 0.1 * dam) then text = text .. string.format(" {%s}", AbbreviateLargeNumbers(block)) end
   if (absorb >= 0.1 * dam) then text = text .. string.format(" (%s)", AbbreviateLargeNumbers(absorb)) end
-  if (overkill > 0) then text = string.format("|cffffffff %s †", text) end
+  if (overkill > 0) then text = string.format("%s|cffffffff †", text) end
   local icon
   if (spid) then
     icon = select(3, GetSpellInfo(spid))
