@@ -80,8 +80,35 @@ function eh:InitAddon(ev, addon)
       GameTooltip:SetText(self.tooltip)
       GameTooltip:Show()
     end
+    local function showspellref(self)
+      if down or not self.spellid then return end
+      if IsShiftKeyDown() or IsControlKeyDown() then
+        local editbox = GetCurrentKeyBoardFocus()
+        if not editbox or not editbox:IsVisible() then return end
+        if IsShiftKeyDown() then
+          editbox:Insert(GetSpellLink(self.spellid))
+        else
+          -- this is terrible, but there is no API to remove the escape seqs
+          -- nor to get a combat log message without them.
+          -- just assume we only have colorings, and hyperlinks to
+          -- units/spells; spell links would be fine but need to be replaced
+          -- with ones from GetSpellLink for proper chat formatting.
+          local msg = self.tooltip
+          msg = msg:gsub("|Hunit:.-|h(.-)|h", "%1")
+          msg = msg:gsub("|Hspell:.-|h(.-)|h", "%1")
+          msg = msg:gsub("|c%x%x%x%x%x%x%x%x(.-)|r", "%1")
+          editbox:Insert(msg)
+        end
+      end
+      if (not ItemRefTooltip:IsVisible()) then
+        ItemRefTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE");
+      end
+      ItemRefTooltip:SetHyperlink("spell:" .. self.spellid)
+      ItemRefTooltip:Show()
+    end
     t:SetScript("OnEnter", showtooltip)
     t:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+    t:SetScript("OnMouseUp", showspellref)
     t:EnableMouse(not TankEvents.movable)
     TankEv[i] = t
   end
@@ -91,7 +118,7 @@ function eh:InitAddon(ev, addon)
 end
 eh:SetScript("OnEvent", eh.InitAddon)
 
-function TEv:Add(msg, tooltip, icon, color)
+function TEv:Add(msg, tooltip, icon, color, spellid)
   -- anchor topmost frame to container
   local ev = TankEv[TankEvFrame.bottom.nexti]
   ev:SetPoint("BOTTOMRIGHT", TankEvFrame, "BOTTOMRIGHT")
@@ -106,6 +133,7 @@ function TEv:Add(msg, tooltip, icon, color)
     ev.icon:Hide()
   end
   ev.tooltip = tooltip
+  ev.spellid = spellid
   if not color then color = { 1, 1, 0 } end
   ev.fs:SetTextColor(unpack(color))
   ev.fs:SetText(msg)
@@ -150,12 +178,12 @@ function TEv:CombatEvent(event)
     local effheal = heal - overheal
     if (effheal < 0.025 * UnitHealthMax("player")) then return end
     local icon = select(3, GetSpellInfo(spid))
-    TEv:Add(string.format("+%s", AbbreviateLargeNumbers(effheal)), msg, icon, {0,1,0})
+    TEv:Add(string.format("+%s", AbbreviateLargeNumbers(effheal)), msg, icon, {0,1,0}, spid)
     return
   elseif ev == "SPELL_INTERRUPT" and sguid == UnitGUID("player") then
     local spid, spnam, spsch, extraspid, extraspnam = select(12, CombatLogGetCurrentEventInfo())
     icon = select(3, GetSpellInfo(spid))
-    TEv:Add(extraspnam, msg, icon, {1,1,0})
+    TEv:Add(extraspnam, msg, icon, {1,1,0}, extraspid)
     return
   else return
   end
@@ -174,7 +202,7 @@ function TEv:CombatEvent(event)
   if (spid) then
     icon = select(3, GetSpellInfo(spid))
   end
-  TEv:Add(text, msg, icon, Colors[sch])
+  TEv:Add(text, msg, icon, Colors[sch], spid)
 end
 
 SLASH_TEV1 = '/tev'
