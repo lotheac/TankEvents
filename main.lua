@@ -74,41 +74,48 @@ function eh:InitAddon(ev, addon)
     t.fs:SetPoint("TOPRIGHT", t.icon, "TOPLEFT", -2, 0)
     t.fs:SetJustifyH("RIGHT")
     t.fs:SetJustifyV("CENTER")
-    local function showtooltip(self)
-      if not self.tooltip then return end
-      GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
-      GameTooltip:SetText(self.tooltip)
-      GameTooltip:Show()
+    function t:GetCombatLogMessage()
+      -- this is terrible, but there is no API to remove the escape seqs
+      -- nor to get a combat log message without them.
+      -- just assume we only have colorings, and hyperlinks to units/spells;
+      -- spell links would be fine but need to be replaced with ones from
+      -- GetSpellLink for proper chat formatting.
+      local msg = self.tooltip
+      msg = msg:gsub("|Hunit:.-|h(.-)|h", "%1")
+      msg = msg:gsub("|Hspell:.-|h(.-)|h", "%1")
+      msg = msg:gsub("|c%x%x%x%x%x%x%x%x(.-)|r", "%1")
+      return msg
     end
-    local function showspellref(self)
-      if down or not self.spellid then return end
-      if IsShiftKeyDown() or IsControlKeyDown() then
-        local editbox = GetCurrentKeyBoardFocus()
-        if not editbox or not editbox:IsVisible() then return end
-        if IsShiftKeyDown() then
-          editbox:Insert(GetSpellLink(self.spellid))
-        else
-          -- this is terrible, but there is no API to remove the escape seqs
-          -- nor to get a combat log message without them.
-          -- just assume we only have colorings, and hyperlinks to
-          -- units/spells; spell links would be fine but need to be replaced
-          -- with ones from GetSpellLink for proper chat formatting.
-          local msg = self.tooltip
-          msg = msg:gsub("|Hunit:.-|h(.-)|h", "%1")
-          msg = msg:gsub("|Hspell:.-|h(.-)|h", "%1")
-          msg = msg:gsub("|c%x%x%x%x%x%x%x%x(.-)|r", "%1")
-          editbox:Insert(msg)
-        end
-      end
+    function t:ShowSpellTooltipWindow()
       if (not ItemRefTooltip:IsVisible()) then
         ItemRefTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE");
       end
       ItemRefTooltip:SetHyperlink("spell:" .. self.spellid)
       ItemRefTooltip:Show()
     end
+    local function insertintoeditbox(msg)
+      local editbox = GetCurrentKeyBoardFocus()
+      if not editbox or not editbox:IsVisible() then return end
+      editbox:Insert(msg)
+    end
+    local function clickhandler(self)
+      if IsControlKeyDown() then
+        insertintoeditbox(self:GetCombatLogMessage())
+      elseif IsShiftKeyDown() and self.spellid then
+        insertintoeditbox(GetSpellLink(self.spellid))
+      elseif self.spellid then
+        self:ShowSpellTooltipWindow()
+      end
+    end
+    local function showtooltip(self)
+      if not self.tooltip then return end
+      GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
+      GameTooltip:SetText(self.tooltip)
+      GameTooltip:Show()
+    end
     t:SetScript("OnEnter", showtooltip)
     t:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
-    t:SetScript("OnMouseUp", showspellref)
+    t:SetScript("OnMouseUp", clickhandler)
     t:EnableMouse(not TankEvents.movable)
     TankEv[i] = t
   end
