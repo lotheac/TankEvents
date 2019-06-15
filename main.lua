@@ -100,8 +100,11 @@ function eh:InitAddon(ev, addon)
     end
     local function insertintoeditbox(msg)
       local editbox = GetCurrentKeyBoardFocus()
-      if not editbox or not editbox:IsVisible() then return end
-      editbox:Insert(msg)
+      if editbox and editbox:IsVisible() then
+        editbox:Insert(msg)
+      else
+        ChatFrame_OpenChat(msg)
+      end
     end
     local function clickhandler(self)
       if IsControlKeyDown() then
