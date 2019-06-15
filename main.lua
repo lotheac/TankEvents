@@ -77,13 +77,18 @@ function eh:InitAddon(ev, addon)
     function t:GetCombatLogMessage()
       -- this is terrible, but there is no API to remove the escape seqs
       -- nor to get a combat log message without them.
-      -- just assume we only have colorings, and hyperlinks to units/spells;
-      -- spell links would be fine but need to be replaced with ones from
-      -- GetSpellLink for proper chat formatting.
+      -- just assume we only have colorings, raid marker icons and hyperlinks
+      -- to units/spells; spell links would be fine but need to be replaced
+      -- with ones from GetSpellLink for proper chat formatting.
       local msg = self.tooltip
       msg = msg:gsub("|Hunit:.-|h(.-)|h", "%1")
       msg = msg:gsub("|Hspell:.-|h(.-)|h", "%1")
       msg = msg:gsub("|c%x%x%x%x%x%x%x%x(.-)|r", "%1")
+      -- for some reason target marker icons are formatted like:
+      -- |Hicon:...|h|T...|t|h
+      -- ie. there is an extra '|h' after the closing '|t'.
+      msg = msg:gsub("|Hicon:.-|h", "")
+      msg = msg:gsub("|T.-|t|h", "")
       return msg
     end
     function t:ShowSpellTooltipWindow()
