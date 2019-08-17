@@ -1,25 +1,25 @@
 -- vim: sw=2 sts=2 et
-local eh = CreateFrame("Frame", "TEv", UIParent)
-eh:RegisterEvent("ADDON_LOADED")
+local TEv = CreateFrame("ScrollFrame", "TankEvents", UIParent)
+TEv:RegisterEvent("ADDON_LOADED")
 
-TankEv = {}
+TEv.events = {}
+TEv.config = nil
 
-function eh:InitAddon(ev, addon)
+function TEv:InitAddon(ev, addon)
   if not (ev == "ADDON_LOADED" and addon == "TankEvents") then
     return
   end
   local latest = 1
   local defaultsize = {150,200}
-  if TankEvents == nil then
-    TankEvents = {
+  if self.config == nil then
+    self.config = {
       version = latest,
       offset = {0, 0},
       size = defaultsize,
       movable = true
     }
   end
-  local f = CreateFrame("ScrollFrame", "TankEventsFrame", UIParent)
-  TankEvFrame = f
+  local f = self
   f:SetFrameStrata("LOW")
   f:SetClampedToScreen(true)
   f:SetMovable(true)
@@ -35,17 +35,17 @@ function eh:InitAddon(ev, addon)
   end)
   -- TODO: save position
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
-  f:EnableMouse(TankEvents.movable)
+  f:EnableMouse(self.config.movable)
   f:EnableMouseWheel(true)
   -- TODO: mousewheel scrolling
 
-  f:SetSize(unpack(TankEvents.size))
+  f:SetSize(unpack(self.config.size))
   if not f:IsUserPlaced() then
-    f:SetPoint("CENTER", UIParent, "CENTER", unpack(TankEvents.offset))
+    f:SetPoint("CENTER", UIParent, "CENTER", unpack(self.config.offset))
   end
   f.bg = f:CreateTexture(nil, "BACKGROUND")
   f.bg:SetAllPoints()
-  local alpha = TankEvents.movable and 0.5 or 0
+  local alpha = self.config.movable and 0.5 or 0
   f.bg:SetColorTexture(0, 0, 0, alpha)
 
   local evheight = 16
@@ -63,7 +63,7 @@ function eh:InitAddon(ev, addon)
       t:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT")
       t.nexti = 100
     else
-      t:SetPoint("BOTTOMRIGHT", TankEv[i - 1], "TOPRIGHT")
+      t:SetPoint("BOTTOMRIGHT", self.events[i - 1], "TOPRIGHT")
       t.nexti = i - 1
     end
     t:SetHeight(evheight)
@@ -124,23 +124,24 @@ function eh:InitAddon(ev, addon)
     t:SetScript("OnEnter", showtooltip)
     t:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
     t:SetScript("OnMouseUp", clickhandler)
-    t:EnableMouse(not TankEvents.movable)
-    TankEv[i] = t
+    t:EnableMouse(not self.config.movable)
+    self.events[i] = t
   end
-  TankEvFrame.bottom = TankEv[1]
-  TankEvFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-  TankEvFrame:SetScript("OnEvent", TEv.CombatEvent)
+  self.bottom = self.events[1]
+  self:UnregisterEvent("ADDON_LOADED")
+  self:SetScript("OnEvent", self.CombatEvent)
+  self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 end
-eh:SetScript("OnEvent", eh.InitAddon)
+TEv:SetScript("OnEvent", TEv.InitAddon)
 
 function TEv:Add(msg, tooltip, icon, color, spellid)
   -- anchor topmost frame to container
-  local ev = TankEv[TankEvFrame.bottom.nexti]
-  ev:SetPoint("BOTTOMRIGHT", TankEvFrame, "BOTTOMRIGHT")
+  local ev = self.events[self.bottom.nexti]
+  ev:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT")
   -- and move the rest up
-  local bottom = TankEvFrame.bottom
+  local bottom = self.bottom
   bottom:SetPoint("BOTTOMRIGHT", ev, "TOPRIGHT")
-  TankEvFrame.bottom = ev
+  self.bottom = ev
   if (icon) then
     ev.icon:SetTexture(icon)
     ev.icon:Show()
@@ -193,12 +194,12 @@ function TEv:CombatEvent(event)
     local effheal = heal - overheal
     if (effheal < 0.025 * UnitHealthMax("player")) then return end
     local icon = select(3, GetSpellInfo(spid))
-    TEv:Add(string.format("+%s", AbbreviateLargeNumbers(effheal)), msg, icon, {0,1,0}, spid)
+    self:Add(string.format("+%s", AbbreviateLargeNumbers(effheal)), msg, icon, {0,1,0}, spid)
     return
   elseif ev == "SPELL_INTERRUPT" and sguid == UnitGUID("player") then
     local spid, spnam, spsch, extraspid, extraspnam = select(12, CombatLogGetCurrentEventInfo())
     icon = select(3, GetSpellInfo(spid))
-    TEv:Add(extraspnam, msg, icon, {1,1,0}, extraspid)
+    self:Add(extraspnam, msg, icon, {1,1,0}, extraspid)
     return
   else return
   end
@@ -217,16 +218,17 @@ function TEv:CombatEvent(event)
   if (spid) then
     icon = select(3, GetSpellInfo(spid))
   end
-  TEv:Add(text, msg, icon, Colors[sch], spid)
+  print(self:GetName() .. " " .. self:GetObjectType())
+  self:Add(text, msg, icon, Colors[sch], spid)
 end
 
 SLASH_TEV1 = '/tev'
 function SlashCmdList.TEV(msg, editbox)
-  TankEvents.movable = not TankEvents.movable
-  TankEvFrame:EnableMouse(TankEvents.movable)
-  for _,ev in pairs(TankEv) do
-    ev:EnableMouse(not TankEvents.movable)
+  TEv.config.movable = not TEv.config.movable
+  TEv:EnableMouse(TEv.config.movable)
+  for _,ev in ipairs(TEv.events) do
+    ev:EnableMouse(not TEv.config.movable)
   end
-  local alpha = TankEvents.movable and 0.5 or 0
-  TankEvFrame.bg:SetColorTexture(0, 0, 0, alpha)
+  local alpha = TEv.config.movable and 0.5 or 0
+  TEv.bg:SetColorTexture(0, 0, 0, alpha)
 end
