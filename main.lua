@@ -3,7 +3,7 @@ local TEv = CreateFrame("ScrollFrame", "TankEvents", UIParent)
 TEv:RegisterEvent("ADDON_LOADED")
 
 TEv.events = {}
-TEv.config = nil
+TankEvents = nil
 
 function TEv:InitAddon(ev, addon)
   if not (ev == "ADDON_LOADED" and addon == "TankEvents") then
@@ -11,8 +11,8 @@ function TEv:InitAddon(ev, addon)
   end
   local latest = 1
   local defaultsize = {150,200}
-  if self.config == nil then
-    self.config = {
+  if TankEvents == nil then
+    TankEvents = {
       version = latest,
       offset = {0, 0},
       size = defaultsize,
@@ -35,17 +35,17 @@ function TEv:InitAddon(ev, addon)
   end)
   -- TODO: save position
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
-  f:EnableMouse(self.config.movable)
+  f:EnableMouse(TankEvents.movable)
   f:EnableMouseWheel(true)
   -- TODO: mousewheel scrolling
 
-  f:SetSize(unpack(self.config.size))
+  f:SetSize(unpack(TankEvents.size))
   if not f:IsUserPlaced() then
-    f:SetPoint("CENTER", UIParent, "CENTER", unpack(self.config.offset))
+    f:SetPoint("CENTER", UIParent, "CENTER", unpack(TankEvents.offset))
   end
   f.bg = f:CreateTexture(nil, "BACKGROUND")
   f.bg:SetAllPoints()
-  local alpha = self.config.movable and 0.5 or 0
+  local alpha = TankEvents.movable and 0.5 or 0
   f.bg:SetColorTexture(0, 0, 0, alpha)
 
   local evheight = 16
@@ -124,7 +124,7 @@ function TEv:InitAddon(ev, addon)
     t:SetScript("OnEnter", showtooltip)
     t:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
     t:SetScript("OnMouseUp", clickhandler)
-    t:EnableMouse(not self.config.movable)
+    t:EnableMouse(not TankEvents.movable)
     self.events[i] = t
   end
   self.bottom = self.events[1]
@@ -224,11 +224,11 @@ end
 
 SLASH_TEV1 = '/tev'
 function SlashCmdList.TEV(msg, editbox)
-  TEv.config.movable = not TEv.config.movable
-  TEv:EnableMouse(TEv.config.movable)
+  TankEvents.movable = not TankEvents.movable
+  TEv:EnableMouse(TankEvents.movable)
   for _,ev in ipairs(TEv.events) do
-    ev:EnableMouse(not TEv.config.movable)
+    ev:EnableMouse(not TankEvents.movable)
   end
-  local alpha = TEv.config.movable and 0.5 or 0
+  local alpha = TankEvents.movable and 0.5 or 0
   TEv.bg:SetColorTexture(0, 0, 0, alpha)
 end
