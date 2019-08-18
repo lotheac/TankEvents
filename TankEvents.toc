@@ -1,4 +1,4 @@
 ## Interface: 80200
 ## Title: TankEvents
-## SavedVariablesPerCharacter: TankEvents
+## SavedVariablesPerCharacter: TankEventsSaved
 main.lua

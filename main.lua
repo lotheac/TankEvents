@@ -3,7 +3,7 @@ local TEv = CreateFrame("ScrollFrame", "TankEvents", UIParent)
 TEv:RegisterEvent("ADDON_LOADED")
 
 TEv.events = {}
-TankEvents = nil
+TankEventsSaved = nil
 
 function TEv:InitAddon(ev, addon)
   if not (ev == "ADDON_LOADED" and addon == "TankEvents") then
@@ -11,8 +11,8 @@ function TEv:InitAddon(ev, addon)
   end
   local latest = 1
   local defaultsize = {150,200}
-  if TankEvents == nil then
-    TankEvents = {
+  if TankEventsSaved == nil then
+    TankEventsSaved = {
       version = latest,
       offset = {0, 0},
       size = defaultsize,
@@ -35,17 +35,17 @@ function TEv:InitAddon(ev, addon)
   end)
   -- TODO: save position
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
-  f:EnableMouse(TankEvents.movable)
+  f:EnableMouse(TankEventsSaved.movable)
   f:EnableMouseWheel(true)
   -- TODO: mousewheel scrolling
 
-  f:SetSize(unpack(TankEvents.size))
   if not f:IsUserPlaced() then
-    f:SetPoint("CENTER", UIParent, "CENTER", unpack(TankEvents.offset))
+    f:SetPoint("CENTER", UIParent, "CENTER", unpack(TankEventsSaved.offset))
+    f:SetSize(unpack(TankEventsSaved.size))
   end
   f.bg = f:CreateTexture(nil, "BACKGROUND")
   f.bg:SetAllPoints()
-  local alpha = TankEvents.movable and 0.5 or 0
+  local alpha = TankEventsSaved.movable and 0.5 or 0
   f.bg:SetColorTexture(0, 0, 0, alpha)
 
   local evheight = 16
@@ -124,7 +124,7 @@ function TEv:InitAddon(ev, addon)
     t:SetScript("OnEnter", showtooltip)
     t:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
     t:SetScript("OnMouseUp", clickhandler)
-    t:EnableMouse(not TankEvents.movable)
+    t:EnableMouse(not TankEventsSaved.movable)
     self.events[i] = t
   end
   self.bottom = self.events[1]
@@ -223,11 +223,11 @@ end
 
 SLASH_TEV1 = '/tev'
 function SlashCmdList.TEV(msg, editbox)
-  TankEvents.movable = not TankEvents.movable
-  TEv:EnableMouse(TankEvents.movable)
+  TankEventsSaved.movable = not TankEventsSaved.movable
+  TEv:EnableMouse(TankEventsSaved.movable)
   for _,ev in ipairs(TEv.events) do
-    ev:EnableMouse(not TankEvents.movable)
+    ev:EnableMouse(not TankEventsSaved.movable)
   end
-  local alpha = TankEvents.movable and 0.5 or 0
+  local alpha = TankEventsSaved.movable and 0.5 or 0
   TEv.bg:SetColorTexture(0, 0, 0, alpha)
 end
