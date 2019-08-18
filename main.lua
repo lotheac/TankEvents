@@ -218,7 +218,6 @@ function TEv:CombatEvent(event)
   if (spid) then
     icon = select(3, GetSpellInfo(spid))
   end
-  print(self:GetName() .. " " .. self:GetObjectType())
   self:Add(text, msg, icon, Colors[sch], spid)
 end
 
