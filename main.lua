@@ -1,11 +1,20 @@
 -- vim: sw=2 sts=2 et
-local TEv = CreateFrame("ScrollFrame", "TankEvents", UIParent)
-TEv:RegisterEvent("ADDON_LOADED")
+local TankEvents = CreateFrame("ScrollFrame", "TankEvents", UIParent)
+TankEvents:RegisterEvent("ADDON_LOADED")
 
-TEv.events = {}
+TankEvents.events = {}
 TankEventsSaved = nil
 
-function TEv:InitAddon(ev, addon)
+function TankEvents:SavePosition()
+  self:StopMovingOrSizing()
+  TankEventsSaved.size = { self:GetSize() }
+  TankEventsSaved.point = { self:GetPoint() }
+  if TankEventsSaved.point[2] ~= nil then
+    TankEventsSaved.point[2] = TankEventsSaved.point[2]:GetName()
+  end
+end
+
+function TankEvents:InitAddon(ev, addon)
   if not (ev == "ADDON_LOADED" and addon == "TankEvents") then
     return
   end
@@ -14,9 +23,9 @@ function TEv:InitAddon(ev, addon)
   if TankEventsSaved == nil then
     TankEventsSaved = {
       version = latest,
-      offset = {0, 0},
+      point = {"CENTER", 0, 0},
       size = defaultsize,
-      movable = true
+      movable = true,
     }
   end
   local f = self
@@ -33,15 +42,14 @@ function TEv:InitAddon(ev, addon)
       t:StartSizing()
     end
   end)
-  -- TODO: save position
-  f:SetScript("OnDragStop", f.StopMovingOrSizing)
+  f:SetScript("OnDragStop", f.SavePosition)
   f:EnableMouse(TankEventsSaved.movable)
   f:EnableMouseWheel(true)
   -- TODO: mousewheel scrolling
 
   if not f:IsUserPlaced() then
-    f:SetPoint("CENTER", UIParent, "CENTER", unpack(TankEventsSaved.offset))
     f:SetSize(unpack(TankEventsSaved.size))
+    f:SetPoint(unpack(TankEventsSaved.point))
   end
   f.bg = f:CreateTexture(nil, "BACKGROUND")
   f.bg:SetAllPoints()
@@ -132,9 +140,9 @@ function TEv:InitAddon(ev, addon)
   self:SetScript("OnEvent", self.CombatEvent)
   self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 end
-TEv:SetScript("OnEvent", TEv.InitAddon)
+TankEvents:SetScript("OnEvent", TankEvents.InitAddon)
 
-function TEv:Add(msg, tooltip, icon, color, spellid)
+function TankEvents:Add(msg, tooltip, icon, color, spellid)
   -- anchor topmost frame to container
   local ev = self.events[self.bottom.nexti]
   ev:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT")
@@ -166,7 +174,7 @@ local Colors = {
   [0x40] = {1,0.5,1}    --arcane
 }
 
-function TEv:CombatEvent(event)
+function TankEvents:CombatEvent(event)
   if event ~= "COMBAT_LOG_EVENT_UNFILTERED" then
     print("unexpected " .. event)
   end
@@ -224,10 +232,10 @@ end
 SLASH_TEV1 = '/tev'
 function SlashCmdList.TEV(msg, editbox)
   TankEventsSaved.movable = not TankEventsSaved.movable
-  TEv:EnableMouse(TankEventsSaved.movable)
-  for _,ev in ipairs(TEv.events) do
+  TankEvents:EnableMouse(TankEventsSaved.movable)
+  for _,ev in ipairs(TankEvents.events) do
     ev:EnableMouse(not TankEventsSaved.movable)
   end
   local alpha = TankEventsSaved.movable and 0.5 or 0
-  TEv.bg:SetColorTexture(0, 0, 0, alpha)
+  TankEvents.bg:SetColorTexture(0, 0, 0, alpha)
 end
