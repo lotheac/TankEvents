@@ -115,6 +115,9 @@ function TankEvents:InitAddon(ev, addon)
       end
     end
     local function clickhandler(self)
+      if (GetMouseFocus() ~= self) then
+        return
+      end
       if IsControlKeyDown() then
         insertintoeditbox(self:GetCombatLogMessage())
       elseif IsShiftKeyDown() and self.spellid then
