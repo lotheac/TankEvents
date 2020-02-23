@@ -179,7 +179,7 @@ local Colors = {
 
 function TankEvents:CombatEvent(event)
   if event ~= "COMBAT_LOG_EVENT_UNFILTERED" then
-    print("unexpected " .. event)
+    return
   end
   local ts, ev, hidecaster, sguid, sname, sflg, srflg, dguid, dflg, drflg = CombatLogGetCurrentEventInfo()
   if not (dguid == UnitGUID("player") or sguid == UnitGUID("player")) then
@@ -197,9 +197,6 @@ function TankEvents:CombatEvent(event)
   elseif to_me and (ev == "RANGE_DAMAGE" or ev == "SPELL_DAMAGE" or ev == "SPELL_PERIODIC_DAMAGE" or ev == "DAMAGE_SPLIT" or ev == "DAMAGE_SHIELD") then
     spid, spnam, spsch = select(12, CombatLogGetCurrentEventInfo())
     seloffset = 15
-  elseif to_me and string.find(ev, "_DAMAGE$") then
-    print("unhandled evtype ".. ev)
-    return
   elseif to_me and string.find(ev, "_HEAL$") then
     local spid, spnam, spsch, heal, overheal, absorb, crit = select(12, CombatLogGetCurrentEventInfo())
     local effheal = heal - overheal
