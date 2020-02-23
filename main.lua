@@ -194,7 +194,7 @@ function TankEvents:CombatEvent(event)
     seloffset = 12
   elseif to_me and ev == "ENVIRONMENTAL_DAMAGE" then
     seloffset = 13
-  elseif to_me and (ev == "RANGE_DAMAGE" or ev == "SPELL_DAMAGE" or ev == "SPELL_PERIODIC_DAMAGE" or ev == "DAMAGE_SPLIT") then
+  elseif to_me and (ev == "RANGE_DAMAGE" or ev == "SPELL_DAMAGE" or ev == "SPELL_PERIODIC_DAMAGE" or ev == "DAMAGE_SPLIT" or ev == "DAMAGE_SHIELD") then
     spid, spnam, spsch = select(12, CombatLogGetCurrentEventInfo())
     seloffset = 15
   elseif to_me and string.find(ev, "_DAMAGE$") then
