@@ -161,21 +161,11 @@ function TankEvents:Add(msg, tooltip, icon, color, spellid)
   end
   ev.tooltip = tooltip
   ev.spellid = spellid
-  if not color then color = { 1, 1, 0 } end
-  ev.fs:SetTextColor(unpack(color))
+  if not color then color = { r=1, g=1, b=0, a=1 } end
+  ev.fs:SetTextColor(color.r, color.g, color.b, color.a)
   ev.fs:SetText(msg)
   ev:SetWidth(ev.fs:GetStringWidth() + 2 + ev.icon:GetWidth())
 end
-
-local Colors = {
-  [0x1] = {1,1,1},      --phys
-  [0x2] = {1,0.9,0.5},  --holy
-  [0x4] = {1,0.5,0},    --fire
-  [0x8] = {0.6,1,0.6},  --nature
-  [0x10] = {0.5,1,1},   --frost
-  [0x20] = {0.5,0.5,1}, --shadow
-  [0x40] = {1,0.5,1}    --arcane
-}
 
 function TankEvents:CombatEvent(event)
   if event ~= "COMBAT_LOG_EVENT_UNFILTERED" then
@@ -202,12 +192,12 @@ function TankEvents:CombatEvent(event)
     local effheal = heal - overheal
     if (effheal < 0.025 * UnitHealthMax("player")) then return end
     local icon = select(3, GetSpellInfo(spid))
-    self:Add(string.format("+%s", AbbreviateLargeNumbers(effheal)), msg, icon, {0,1,0}, spid)
+    self:Add(string.format("+%s", AbbreviateLargeNumbers(effheal)), msg, icon, {r=0,g=1,b=0,a=1}, spid)
     return
   elseif ev == "SPELL_INTERRUPT" and sguid == UnitGUID("player") then
     local spid, spnam, spsch, extraspid, extraspnam = select(12, CombatLogGetCurrentEventInfo())
     icon = select(3, GetSpellInfo(spid))
-    self:Add(extraspnam, msg, icon, {1,1,0}, extraspid)
+    self:Add(extraspnam, msg, icon, {r=1,g=1,b=0,a=1}, extraspid)
     return
   else return
   end
@@ -226,7 +216,12 @@ function TankEvents:CombatEvent(event)
   if (spid) then
     icon = select(3, GetSpellInfo(spid))
   end
-  self:Add(text, msg, icon, Colors[sch], spid)
+  local color = COMBATLOG_DEFAULT_COLORS.schoolColoring[sch]
+  if sch == SCHOOL_MASK_PHYSICAL then
+    -- use white for physical damage instead of the default yellow
+    color = { r=1, g=1, b=1, a=1 }
+  end
+  self:Add(text, msg, icon, color, spid)
 end
 
 SLASH_TEV1 = '/tev'
